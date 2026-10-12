@@ -1,0 +1,5 @@
+RetroContacts.app/
+*.dmg
+*.zip
+.build-tmp/
+.DS_Store

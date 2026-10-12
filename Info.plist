@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+ <key>CFBundleName</key><string>RetroContacts</string>
+ <key>CFBundleDisplayName</key><string>RetroContacts</string>
+ <key>CFBundleIdentifier</key><string>de.retrocontacts.app</string>
+ <key>CFBundleExecutable</key><string>RetroContacts</string>
+ <key>CFBundleIconFile</key><string>AppIcon</string>
+ <key>CFBundlePackageType</key><string>APPL</string>
+ <key>CFBundleShortVersionString</key><string>1.0</string>
+ <key>CFBundleVersion</key><string>1</string>
+ <key>LSMinimumSystemVersion</key><string>14.0</string>
+ <key>NSPrincipalClass</key><string>NSApplication</string>
+ <key>NSHighResolutionCapable</key><true/>
+ <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
+ <key>ITSAppUsesNonExemptEncryption</key><false/>
+ <key>NSHumanReadableCopyright</key><string>© 2026 Maik Klotz. Inoffizielles Hobbyprojekt, nicht mit Apple verbunden. / Unofficial hobby project, not affiliated with Apple.</string>
+ <key>NSContactsUsageDescription</key><string>RetroContacts zeigt und bearbeitet Ihre Kontakte aus dem System. / RetroContacts shows and edits your system contacts.</string>
+ <key>CFBundleDocumentTypes</key><array><dict>
+   <key>CFBundleTypeName</key><string>vCard</string><key>CFBundleTypeRole</key><string>Viewer</string>
+   <key>LSItemContentTypes</key><array><string>public.vcard</string></array></dict></array>
+ <key>CFBundleLocalizations</key><array><string>de</string><string>en</string></array>
+</dict></plist>
