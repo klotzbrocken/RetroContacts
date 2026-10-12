@@ -3,7 +3,7 @@
 # SIGN_ID="Developer ID Application: …" ./build.sh  -> mit Hardened Runtime und Zeitstempel signieren.
 set -e
 cd "$(dirname "$0")"
-APP=RetroContacts.app
+APP=build/RetroContacts.app
 rm -rf "$APP" && mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" .build-tmp
 if [ ! -f Resources/AppIcon.icns ]; then
   S=$(mktemp -d)/AppIcon.iconset; mkdir -p "$S"

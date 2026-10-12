@@ -1,5 +1,9 @@
-RetroContacts.app/
+.build/
+build/
+.build-tmp/
+.swiftpm/
+*.xcodeproj
 *.dmg
 *.zip
-.build-tmp/
 .DS_Store
+Reference/out/
