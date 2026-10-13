@@ -22,6 +22,6 @@ RetroContacts is an **unofficial hobby project**, not affiliated with, endorsed 
 
 - **Name:** "RetroContacts" does not use an Apple trademark as a product name. Do not use "Contacts", "Kontakte", "Mac" or "OS X" as the app name.
 - **Design:** the book/leather design is a homage to the OS X 10.8 interface. **No Apple image files, icons, textures or font files** are copied; everything is redrawn. Recreating the look may be seen as a trade-dress issue when distributed **publicly or commercially**.
-- **Icon:** the supplied (AI-generated) icon closely resembles the former Apple Contacts icon. Use an original icon before any public release or fork – the *App icon* setting (PNG 256 × 256) exists for that.
+- **Icon:** the supplied icon is AI-generated and not covered by the GPL (all rights reserved). Forks may use their own via the *App icon* setting (PNG 256 × 256).
 - **Screenshots/references** (Ars Technica, Macworld, …) are local development references only and not part of the repository.
 - "Mountain Lion" / "OS X" are used descriptively only.
