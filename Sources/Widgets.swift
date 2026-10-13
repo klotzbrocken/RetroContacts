@@ -8,12 +8,17 @@ enum Fonts {
 }
 
 enum Pal {
-    static let labelGrey = NSColor(calibratedWhite: 0.55, alpha: 1)
-    static let selBlueText = NSColor(calibratedRed: 0.31, green: 0.43, blue: 0.61, alpha: 1)
-    static let selPale = NSColor(calibratedRed: 0.935, green: 0.950, blue: 0.985, alpha: 1)
-    static let link = NSColor(calibratedRed: 0.06, green: 0.20, blue: 0.82, alpha: 1)
-    static let sideBlue = NSColor(calibratedRed: 0.35, green: 0.45, blue: 0.65, alpha: 1)
-    static let line = NSColor(calibratedWhite: 0.62, alpha: 1)
+    static let labelGrey = NSColor.sg(0.55, 1)
+    static let selBlueText = NSColor(srgbRed: 0.31, green: 0.43, blue: 0.61, alpha: 1)
+    static let selPale = NSColor(srgbRed: 0.935, green: 0.950, blue: 0.985, alpha: 1)
+    static let link = NSColor(srgbRed: 0.06, green: 0.20, blue: 0.82, alpha: 1)
+    static let sideBlue = NSColor(srgbRed: 0.35, green: 0.45, blue: 0.65, alpha: 1)
+    static let line = NSColor.sg(0.62, 1)
+}
+
+extension NSColor {
+    /// grey in sRGB (the legacy "calibrated" grey space is gamma 1.8 and renders visibly lighter)
+    static func sg(_ w: CGFloat, _ a: CGFloat = 1) -> NSColor { NSColor(srgbRed: w, green: w, blue: w, alpha: a) }
 }
 
 func gradient(_ c: [NSColor]) -> NSGradient { NSGradient(colors: c)! }
@@ -57,17 +62,17 @@ class RetroButton: NSControl {
         clipBox()?.addClip()
         let dark = pressed || selectedLook
         let g: NSGradient = dark
-            ? gradient([NSColor(calibratedWhite: pressed ? 0.80 : 0.88, alpha: 1), NSColor(calibratedWhite: pressed ? 0.88 : 0.95, alpha: 1)])
-            : gradient([NSColor(calibratedWhite: 1.0, alpha: 1), NSColor(calibratedWhite: 0.985, alpha: 1), NSColor(calibratedWhite: 0.955, alpha: 1), NSColor(calibratedWhite: 0.965, alpha: 1)])
+            ? gradient([NSColor.sg(pressed ? 0.80 : 0.88, 1), NSColor.sg(pressed ? 0.88 : 0.95, 1)])
+            : gradient([NSColor.sg(1.0, 1), NSColor.sg(0.985, 1), NSColor.sg(0.955, 1), NSColor.sg(0.965, 1)])
         g.draw(in: path, angle: -90)
         NSGraphicsContext.restoreGraphicsState()
-        NSColor(calibratedWhite: active ? 0.80 : 0.86, alpha: 1).setStroke()
+        NSColor.sg(active ? 0.80 : 0.86, 1).setStroke()
         path.lineWidth = 1
         if segmentPosition.first && segmentPosition.last { path.stroke() }
         else {
             NSGraphicsContext.saveGraphicsState(); clipBox()?.addClip(); path.stroke(); NSGraphicsContext.restoreGraphicsState()
         }
-        let ink = NSColor(calibratedWhite: isEnabled ? 0.22 : 0.70, alpha: 1)
+        let ink = NSColor.sg(isEnabled ? 0.22 : 0.70, 1)
         if let glyph = glyph { glyph(bounds, ink) }
         else if !title.isEmpty {
             let a: [NSAttributedString.Key: Any] = [.font: Fonts.regular(11), .foregroundColor: isEnabled ? (titleColor ?? ink) : ink]
@@ -102,6 +107,15 @@ class RetroButton: NSControl {
 // glyph helpers
 enum Glyph {
     static func plus(_ r: NSRect, _ c: NSColor) {
+        // thin cross with small arrow tips, grey (as in the original)
+        let g = NSColor.sg(c.redComponent > 0.5 ? c.redComponent : 0.42, 1); g.setStroke(); g.setFill()
+        let q = NSBezierPath(); q.lineWidth = 1.5
+        q.move(to: NSPoint(x: r.midX - 5, y: r.midY)); q.line(to: NSPoint(x: r.midX + 5, y: r.midY)); q.move(to: NSPoint(x: r.midX, y: r.midY - 5)); q.line(to: NSPoint(x: r.midX, y: r.midY + 5)); q.stroke()
+        for (dx, dy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
+            let tip = NSPoint(x: r.midX + 6.8 * dx, y: r.midY + 6.8 * dy), bx = r.midX + 4 * dx, by = r.midY + 4 * dy
+            let t = NSBezierPath(); t.move(to: tip); t.line(to: NSPoint(x: bx - 1.8 * dy, y: by + 1.8 * dx)); t.line(to: NSPoint(x: bx + 1.8 * dy, y: by - 1.8 * dx)); t.close(); t.fill()
+        }
+        return
         c.setStroke(); let p = NSBezierPath(); p.lineWidth = 1.6
         p.move(to: NSPoint(x: r.midX - 4, y: r.midY)); p.line(to: NSPoint(x: r.midX + 4, y: r.midY))
         p.move(to: NSPoint(x: r.midX, y: r.midY - 4)); p.line(to: NSPoint(x: r.midX, y: r.midY + 4)); p.stroke()
@@ -205,20 +219,24 @@ final class RetroSearchField: NSView, NSTextFieldDelegate {
         let p = NSBezierPath(roundedRect: r, xRadius: r.height / 2, yRadius: r.height / 2)
                 NSColor.white.setFill(); p.fill()
         NSGraphicsContext.saveGraphicsState(); p.addClip()
-        gradient([NSColor(calibratedWhite: 0.86, alpha: 1), NSColor(calibratedWhite: 1, alpha: 0)]).draw(in: NSRect(x: 0, y: 0, width: bounds.width, height: 3), angle: -90)
+        gradient([NSColor.sg(0.86, 1), NSColor.sg(1, 0)]).draw(in: NSRect(x: 0, y: 0, width: bounds.width, height: 3), angle: -90)
         NSGraphicsContext.restoreGraphicsState()
-        (focused ? NSColor(calibratedRed: 0.35, green: 0.55, blue: 0.85, alpha: 1) : NSColor(calibratedWhite: 0.76, alpha: 1)).setStroke(); p.lineWidth = 1; p.stroke()
+        (focused ? NSColor(srgbRed: 0.35, green: 0.55, blue: 0.85, alpha: 1) : NSColor.sg(0.82, 1)).setStroke(); p.lineWidth = 1; p.stroke()
+        if !focused {   // darker upper edge, as measured on the original
+            NSGraphicsContext.saveGraphicsState(); NSBezierPath(rect: NSRect(x: 0, y: 0, width: bounds.width, height: bounds.height * 0.5)).addClip()
+            NSColor.sg(0.65, 1).setStroke(); p.stroke(); NSGraphicsContext.restoreGraphicsState()
+        }
         // magnifier
-        let c = NSColor(calibratedWhite: 0.40, alpha: 1); c.setStroke()
-        let m = NSBezierPath(ovalIn: NSRect(x: 7, y: bounds.midY - 5, width: 7, height: 7)); m.lineWidth = 1.3; m.stroke()
-        let h = NSBezierPath(); h.lineWidth = 1.6; h.lineCapStyle = .round; h.move(to: NSPoint(x: 13, y: bounds.midY + 1.5)); h.line(to: NSPoint(x: 16, y: bounds.midY + 4.5)); h.stroke()
+        let c = NSColor.sg(0.32, 1); c.setStroke()
+        let m = NSBezierPath(ovalIn: NSRect(x: 6.5, y: bounds.midY - 5.5, width: 8, height: 8)); m.lineWidth = 1.7; m.stroke()
+        let h = NSBezierPath(); h.lineWidth = 2.2; h.lineCapStyle = .round; h.move(to: NSPoint(x: 13, y: bounds.midY + 1.5)); h.line(to: NSPoint(x: 16.5, y: bounds.midY + 5)); h.stroke()
         if let n = count {
-            let s = NSAttributedString(string: L("\(n) gefunden", "\(n) Found"), attributes: [.font: Fonts.regular(10), .foregroundColor: NSColor(calibratedWhite: 0.45, alpha: 1)])
+            let s = NSAttributedString(string: L("\(n) gefunden", "\(n) Found"), attributes: [.font: Fonts.regular(10), .foregroundColor: NSColor.sg(0.45, 1)])
             s.draw(at: NSPoint(x: bounds.width - 20 - s.size().width, y: (bounds.height - s.size().height) / 2))
         }
         if !field.stringValue.isEmpty {
             let cx = bounds.width - 10, cy = bounds.midY
-            NSColor(calibratedWhite: 0.62, alpha: 1).setFill(); NSBezierPath(ovalIn: NSRect(x: cx - 4.5, y: cy - 4.5, width: 9, height: 9)).fill()
+            NSColor.sg(0.62, 1).setFill(); NSBezierPath(ovalIn: NSRect(x: cx - 4.5, y: cy - 4.5, width: 9, height: 9)).fill()
             NSColor.white.setStroke(); let x = NSBezierPath(); x.lineWidth = 1.3
             x.move(to: NSPoint(x: cx - 2, y: cy - 2)); x.line(to: NSPoint(x: cx + 2, y: cy + 2)); x.move(to: NSPoint(x: cx + 2, y: cy - 2)); x.line(to: NSPoint(x: cx - 2, y: cy + 2)); x.stroke()
         }
@@ -239,9 +257,9 @@ final class PhotoView: NSView {
         var r = bounds.insetBy(dx: 0.5, dy: 0.5)
         if editable {   // white mat with drop shadow while editing
             NSGraphicsContext.saveGraphicsState()
-            let sh = NSShadow(); sh.shadowColor = NSColor(calibratedWhite: 0, alpha: 0.35); sh.shadowOffset = NSSize(width: 0, height: -1.5); sh.shadowBlurRadius = 2.5; sh.set()
+            let sh = NSShadow(); sh.shadowColor = NSColor.sg(0, 0.35); sh.shadowOffset = NSSize(width: 0, height: -1.5); sh.shadowBlurRadius = 2.5; sh.set()
             NSColor.white.setFill(); NSBezierPath(rect: r).fill(); NSGraphicsContext.restoreGraphicsState()
-            NSColor(calibratedWhite: 0.7, alpha: 1).setStroke(); NSBezierPath(rect: r).stroke()
+            NSColor.sg(0.7, 1).setStroke(); NSBezierPath(rect: r).stroke()
             r = r.insetBy(dx: 3, dy: 3)
         }
         let clip = NSBezierPath(roundedRect: r, xRadius: 3, yRadius: 3)
@@ -251,8 +269,8 @@ final class PhotoView: NSView {
             let w = s.width * k, h = s.height * k
             img.draw(in: NSRect(x: r.midX - w / 2, y: r.midY - h / 2, width: w, height: h), from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
         } else {
-            gradient([NSColor(calibratedWhite: 0.93, alpha: 1), NSColor(calibratedWhite: 0.80, alpha: 1)]).draw(in: r, angle: 90)
-            NSColor(calibratedWhite: 0.62, alpha: 1).setFill()
+            gradient([NSColor.sg(0.98, 1), NSColor.sg(0.90, 1)]).draw(in: r, angle: 90)
+            NSColor.sg(0.86, 1).setFill()
             let w = r.width
             NSBezierPath(ovalIn: NSRect(x: r.midX - w * 0.17, y: r.minY + w * 0.18, width: w * 0.34, height: w * 0.38)).fill()
             NSBezierPath(ovalIn: NSRect(x: r.midX - w * 0.38, y: r.minY + w * 0.62, width: w * 0.76, height: w * 0.7)).fill()
@@ -260,13 +278,13 @@ final class PhotoView: NSView {
         if editable && bounds.width >= 44 {
             let a: [NSAttributedString.Key: Any] = [.font: Fonts.regular(10), .foregroundColor: NSColor.white]
             let t = NSAttributedString(string: L("ändern", "edit"), attributes: a); let sz = t.size()
-            NSColor(calibratedWhite: 0.42, alpha: 1).setFill()
+            NSColor.sg(0.42, 1).setFill()
             NSBezierPath(rect: NSRect(x: r.minX, y: r.maxY - 15, width: r.width, height: 15)).fill()
             t.draw(at: NSPoint(x: r.midX - sz.width / 2, y: r.maxY - 14))
         }
         NSGraphicsContext.restoreGraphicsState()
-        NSColor(calibratedWhite: 0.45, alpha: 0.9).setStroke(); clip.lineWidth = 1; clip.stroke()
-        NSColor(calibratedWhite: 1, alpha: 0.30).setStroke(); let inner = NSBezierPath(roundedRect: r.insetBy(dx: 1, dy: 1), xRadius: 2, yRadius: 2); inner.lineWidth = 1; inner.stroke()
+        NSColor.sg(0.45, 0.9).setStroke(); clip.lineWidth = 1; clip.stroke()
+        NSColor.sg(1, 0.30).setStroke(); let inner = NSBezierPath(roundedRect: r.insetBy(dx: 1, dy: 1), xRadius: 2, yRadius: 2); inner.lineWidth = 1; inner.stroke()
     }
 
     private func set(_ img: NSImage?) {

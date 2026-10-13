@@ -9,17 +9,17 @@ final class RoundIconButton: NSControl {
     var pressed = false { didSet { needsDisplay = true } }
     override var isFlipped: Bool { true }
     override var mouseDownCanMoveWindow: Bool { false }
-    convenience init(_ k: Kind) { self.init(frame: NSRect(x: 0, y: 0, width: 16, height: 16)); kind = k; setAccessibilityRole(.button); setAccessibilityLabel(k == .minus ? L("Entfernen", "Remove") : L("Hinzufügen", "Add")) }
+    convenience init(_ k: Kind) { self.init(frame: NSRect(x: 0, y: 0, width: 13, height: 13)); kind = k; setAccessibilityRole(.button); setAccessibilityLabel(k == .minus ? L("Entfernen", "Remove") : L("Hinzufügen", "Add")) }
     override func draw(_ r: NSRect) {
-        let o = NSBezierPath(ovalIn: bounds.insetBy(dx: 1.5, dy: 1.5))
+        let o = NSBezierPath(ovalIn: bounds.insetBy(dx: 0.8, dy: 0.8))
         let (a, b, e): (NSColor, NSColor, NSColor) = kind == .minus
-            ? (NSColor(calibratedRed: 0.98, green: 0.52, blue: 0.48, alpha: 1), NSColor(calibratedRed: 0.80, green: 0.14, blue: 0.12, alpha: 1), NSColor(calibratedRed: 0.55, green: 0.08, blue: 0.06, alpha: 1))
-            : (NSColor(calibratedRed: 0.55, green: 0.85, blue: 0.45, alpha: 1), NSColor(calibratedRed: 0.20, green: 0.60, blue: 0.14, alpha: 1), NSColor(calibratedRed: 0.10, green: 0.40, blue: 0.06, alpha: 1))
+            ? (NSColor(srgbRed: 0.98, green: 0.52, blue: 0.48, alpha: 1), NSColor(srgbRed: 0.80, green: 0.14, blue: 0.12, alpha: 1), NSColor(srgbRed: 0.55, green: 0.08, blue: 0.06, alpha: 1))
+            : (NSColor(srgbRed: 0.55, green: 0.85, blue: 0.45, alpha: 1), NSColor(srgbRed: 0.20, green: 0.60, blue: 0.14, alpha: 1), NSColor(srgbRed: 0.10, green: 0.40, blue: 0.06, alpha: 1))
         gradient(pressed ? [b, b] : [a, b]).draw(in: o, angle: -90)
         e.setStroke(); o.lineWidth = 1; o.stroke()
-        NSColor.white.setStroke(); let p = NSBezierPath(); p.lineWidth = 1.8
-        p.move(to: NSPoint(x: bounds.midX - 3.5, y: bounds.midY)); p.line(to: NSPoint(x: bounds.midX + 3.5, y: bounds.midY))
-        if kind == .plus { p.move(to: NSPoint(x: bounds.midX, y: bounds.midY - 3.5)); p.line(to: NSPoint(x: bounds.midX, y: bounds.midY + 3.5)) }
+        NSColor.white.setStroke(); let p = NSBezierPath(); p.lineWidth = 1.6
+        p.move(to: NSPoint(x: bounds.midX - 2.8, y: bounds.midY)); p.line(to: NSPoint(x: bounds.midX + 2.8, y: bounds.midY))
+        if kind == .plus { p.move(to: NSPoint(x: bounds.midX, y: bounds.midY - 2.8)); p.line(to: NSPoint(x: bounds.midX, y: bounds.midY + 2.8)) }
         p.stroke()
     }
     override func mouseDown(with e: NSEvent) {
@@ -55,12 +55,12 @@ final class FieldLabel: NSView {
     override var isFlipped: Bool { true }
     override var mouseDownCanMoveWindow: Bool { false }
     override func draw(_ r: NSRect) {
-        let a: [NSAttributedString.Key: Any] = [.font: Fonts.regular(11), .foregroundColor: hover ? NSColor(calibratedWhite: 0.25, alpha: 1) : Pal.labelGrey]
+        let a: [NSAttributedString.Key: Any] = [.font: Fonts.regular(11), .foregroundColor: hover ? NSColor.sg(0.25, 1) : Pal.labelGrey]
         let s = NSAttributedString(string: text, attributes: a); let sz = s.size()
         s.draw(at: NSPoint(x: bounds.width - sz.width - (hover && menuProvider != nil ? 11 : 0), y: 1.5))
         if hover && menuProvider != nil {
             let c = NSPoint(x: bounds.width - 5, y: 7)
-            NSColor(calibratedWhite: 0.3, alpha: 1).setFill()
+            NSColor.sg(0.3, 1).setFill()
             let t = NSBezierPath(); t.move(to: NSPoint(x: c.x - 3, y: c.y - 1.5)); t.line(to: NSPoint(x: c.x + 3, y: c.y - 1.5)); t.line(to: NSPoint(x: c.x, y: c.y + 2)); t.close(); t.fill()
         }
     }
@@ -73,7 +73,7 @@ final class FieldLabel: NSView {
 final class DottedLine: NSView {
     override var isFlipped: Bool { true }
     override func draw(_ r: NSRect) {
-        NSColor(calibratedWhite: 0.66, alpha: 1).setFill()
+        NSColor.sg(0.66, 1).setFill()
         var x: CGFloat = 0
         while x < bounds.width { NSRect(x: x, y: 0, width: 1, height: 1).fill(); x += 3 }
     }
@@ -107,7 +107,7 @@ final class LargeTypeView: NSView {
     var text = NSAttributedString()
     override func draw(_ r: NSRect) {
         let p = NSBezierPath(roundedRect: bounds.insetBy(dx: 2, dy: 2), xRadius: 16, yRadius: 16)
-        NSColor(calibratedWhite: 0.08, alpha: 0.92).setFill(); p.fill()
+        NSColor.sg(0.08, 0.92).setFill(); p.fill()
         let s = text.size(); text.draw(at: NSPoint(x: (bounds.width - s.width) / 2, y: (bounds.height - s.height) / 2))
     }
     override func mouseDown(with e: NSEvent) { window?.orderOut(nil) }
@@ -139,7 +139,7 @@ final class CardView: NSView, NSTextFieldDelegate, NSTextViewDelegate {
     var sepX: CGFloat { compact ? 35 : 30 }
     var rightMargin: CGFloat { compact ? 58 : 37 }
     func layoutMetrics(_ w: CGFloat) {
-        photoX = compact ? 74 : max(24, ((w - 223) / 2).rounded())
+        photoX = compact ? 74 : max(24, ((w - 217) / 2).rounded())
         labelRight = compact ? 123 : photoX + photoSize
         valueX = labelRight + 9
     }
@@ -187,7 +187,7 @@ final class CardView: NSView, NSTextFieldDelegate, NSTextViewDelegate {
             for word in highlight.split(separator: " ") {
                 var from = s.startIndex
                 while let r = s.range(of: String(word), options: [.caseInsensitive, .diacriticInsensitive], range: from..<s.endIndex) {
-                    m.addAttribute(.backgroundColor, value: NSColor(calibratedWhite: 0.78, alpha: 1), range: NSRange(r, in: s)); from = r.upperBound
+                    m.addAttribute(.backgroundColor, value: NSColor.sg(0.78, 1), range: NSRange(r, in: s)); from = r.upperBound
                 }
             }
         }
@@ -247,6 +247,12 @@ final class CardView: NSView, NSTextFieldDelegate, NSTextViewDelegate {
         for u in p.urls {
             row(Labels.text(u.label), NSAttributedString(string: u.value, attributes: [.font: Fonts.regular(11), .foregroundColor: Pal.link, .underlineStyle: NSUnderlineStyle.single.rawValue]), menu: { [weak self] in self?.urlMenu(u.value) },
                 link: { [weak self] in self?.open(u.value.contains("://") ? u.value : "http://" + u.value) })
+        }
+        for r in p.relations where !r.value.isEmpty { row(Labels.text(r.label), val(r.value), menu: { [weak self] in self?.copyMenu(r.value) }) }
+        for im in p.ims where !im.username.isEmpty {
+            let t = NSMutableAttributedString(string: im.username, attributes: [.font: Fonts.regular(11)])
+            t.append(NSAttributedString(string: "  " + im.service, attributes: [.font: Fonts.regular(11), .foregroundColor: Pal.labelGrey]))
+            row(Labels.text(im.label), t, menu: { [weak self] in self?.copyMenu(im.username) })
         }
         for c in p.chats where !c.value.isEmpty { row(c.label.lowercased(), val(c.value), menu: { [weak self] in self?.copyMenu(c.value) }) }
         for a in p.addrs {
@@ -323,7 +329,7 @@ final class CardView: NSView, NSTextFieldDelegate, NSTextViewDelegate {
     }
     func endEdit() { editing = false; rebuild() }
 
-    private func ph(_ s: String, _ f: NSFont) -> NSAttributedString { NSAttributedString(string: s, attributes: [.font: f, .foregroundColor: NSColor(calibratedWhite: 0.68, alpha: 1)]) }
+    private func ph(_ s: String, _ f: NSFont) -> NSAttributedString { NSAttributedString(string: s, attributes: [.font: f, .foregroundColor: NSColor.sg(0.68, 1)]) }
     @discardableResult
     private func field(_ text: String, ph p: String, tag: Int, font: NSFont = Fonts.regular(13), color: NSColor = .black, x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat = 19, set: @escaping (String) -> Void) -> EditField {
         let f = EditField(frame: NSRect(x: x, y: y, width: w, height: h))
@@ -341,12 +347,12 @@ final class CardView: NSView, NSTextFieldDelegate, NSTextViewDelegate {
         let o = scroll.contentView.bounds.origin; rebuild(); scroll.contentView.scroll(to: o); scroll.reflectScrolledClipView(scroll.contentView)
     }
     private func labelPopup(_ options: [String], current: String, y: CGFloat, set: @escaping (String) -> Void) {
-        let b = LabelPopup(frame: NSRect(x: labelRight - 96, y: y - 1, width: 96, height: 20))
-        b.configure(options: options, current: current, onChange: { [weak self] v in set(v); self?.rebuildKeepingScroll() })
+        let b = LabelMenu(frame: NSRect(x: labelRight - 117, y: y, width: 120, height: 19))
+        b.configure(options: options, current: current, text: { Labels.text($0) }, grey: true, onChange: { [weak self] v in set(v); self?.rebuildKeepingScroll() })
         doc.addSubview(b)
     }
     private func minus(y: CGFloat, _ act: @escaping () -> Void) {
-        let m = RoundIconButton(.minus); m.frame.origin = NSPoint(x: max(6, labelRight - 127), y: y + 1.5); m.target = self; m.action = #selector(removeRow(_:))
+        let m = RoundIconButton(.minus); m.frame.origin = NSPoint(x: max(6, labelRight - 127), y: y + 3); m.target = self; m.action = #selector(removeRow(_:))
         objc_setAssociatedObject(m, "rm", act, .OBJC_ASSOCIATION_RETAIN); doc.addSubview(m)
     }
 
@@ -359,21 +365,20 @@ final class CardView: NSView, NSTextFieldDelegate, NSTextViewDelegate {
         let nameFont = Fonts.bold(compact ? 13 : 14)
         var y = photoY
         if draft.asCompany {
-            field(draft.org, ph: L("Firma", "Company"), tag: 13, font: nameFont, x: valueX, y: y, w: vw, h: 20) { [weak self] in self?.draft.org = $0 }
-            y += 36
+            field(draft.org, ph: L("Firma", "Company"), tag: 13, font: nameFont, x: valueX, y: y - 1.5, w: vw, h: 20) { [weak self] in self?.draft.org = $0 }
         } else {
-            let hw = (vw - 6) / 2
-            let first = field(draft.given, ph: L("Vorname", "First"), tag: 11, font: nameFont, x: valueX, y: y, w: hw, h: 20) { [weak self] in self?.draft.given = $0 }
-            field(draft.family, ph: L("Nachname", "Last"), tag: 12, font: nameFont, x: valueX + hw + 6, y: y, w: hw, h: 20) { [weak self] in self?.draft.family = $0 }
+            // first and last name sit on one line, as one name
+            let fw = ceil((draft.given as NSString).size(withAttributes: [.font: nameFont]).width)
+            let firstW = min(vw - 60, max(60, fw + 10))
+            let first = field(draft.given, ph: L("Vorname", "First"), tag: 11, font: nameFont, x: valueX, y: y - 1.5, w: firstW, h: 20) { [weak self] in self?.draft.given = $0 }
+            field(draft.family, ph: L("Nachname", "Last"), tag: 12, font: nameFont, x: valueX + firstW, y: y - 1.5, w: vw - firstW, h: 20) { [weak self] in self?.draft.family = $0 }
             if draft.isNew && draft.given.isEmpty && draft.family.isEmpty && draft.org.isEmpty && window?.firstResponder is NSTextView == false { firstFieldToFocus = first }
-            y += 17
-            field(draft.org, ph: L("Firma", "Company"), tag: 13, font: Fonts.regular(12), color: Pal.labelGrey, x: valueX, y: y, w: vw, h: 18) { [weak self] in self?.draft.org = $0 }
-            y += 19
+            field(draft.org, ph: L("Firma", "Company"), tag: 13, font: Fonts.regular(12), color: Pal.labelGrey, x: valueX, y: y + 14.4, w: vw, h: 18) { [weak self] in self?.draft.org = $0 }
         }
         let cb = NSButton(checkboxWithTitle: L("Firma", "Company"), target: self, action: #selector(toggleCompany(_:)))
-        cb.font = Fonts.regular(11); cb.controlSize = .small; cb.state = draft.asCompany ? .on : .off
-        cb.frame = NSRect(x: valueX - 2, y: y, width: 90, height: 16); doc.addSubview(cb)
-        y = photoY + 64
+        cb.font = Fonts.regular(10); cb.controlSize = .mini; cb.state = draft.asCompany ? .on : .off
+        cb.frame = NSRect(x: valueX - 2, y: photoY + 33, width: 90, height: 16); doc.addSubview(cb)
+        y = photoY + 63
 
         if showNick {
             let fl = FieldLabel(frame: NSRect(x: labelRight - 90, y: y + 1, width: 90, height: 16)); fl.text = L("Spitzname", "nickname"); doc.addSubview(fl)
@@ -386,7 +391,12 @@ final class CardView: NSView, NSTextFieldDelegate, NSTextViewDelegate {
         }
 
         func list(_ kp: WritableKeyPath<Person, [LabeledText]>, base: Int, labels: [String], placeholder: String, defaultLabel: String) {
-            if draft[keyPath: kp].last.map({ !$0.value.isEmpty }) ?? true { draft[keyPath: kp].append(LabeledText(label: defaultLabel, value: "")) }
+            if draft[keyPath: kp].last.map({ !$0.value.isEmpty }) ?? true {
+                // next unused standard label (work, then home, then other) like the original
+                let used = Set(draft[keyPath: kp].map { $0.label })
+                let next = draft[keyPath: kp].isEmpty ? defaultLabel : (labels.first { !used.contains($0) } ?? defaultLabel)
+                draft[keyPath: kp].append(LabeledText(label: next, value: ""))
+            }
             let n = draft[keyPath: kp].count
             for i in 0..<n {
                 let it = draft[keyPath: kp][i]
@@ -405,6 +415,25 @@ final class CardView: NSView, NSTextFieldDelegate, NSTextViewDelegate {
         list(\.phones, base: 1000, labels: Labels.phone, placeholder: L("Telefon", "Phone"), defaultLabel: CNLabelPhoneNumberMobile)
         list(\.emails, base: 2000, labels: Labels.mail, placeholder: L("E-Mail", "Email"), defaultLabel: CNLabelWork)
         list(\.urls, base: 3000, labels: Labels.url, placeholder: "URL", defaultLabel: CNLabelURLAddressHomePage)
+        list(\.relations, base: 3500, labels: Labels.relation, placeholder: L("Verwandte Person", "Related Name"), defaultLabel: CNLabelContactRelationMother)
+
+        // instant messaging: label, user name, service
+        if draft.ims.last.map({ !$0.username.isEmpty }) ?? true { draft.ims.append(IMAddr(label: CNLabelHome, service: CNInstantMessageServiceAIM, username: "")) }
+        for i in 0..<draft.ims.count {
+            let im = draft.ims[i]
+            if !im.username.isEmpty { minus(y: y) { [weak self] in self?.draft.ims.remove(at: i); self?.rebuildKeepingScroll() } }
+            labelPopup(Labels.mail, current: im.label, y: y) { [weak self] v in self?.draft.ims[i].label = v }
+            field(im.username, ph: L("Benutzername", "User Name"), tag: 3700 + i, x: valueX, y: y, w: vw - 70) { [weak self] v in
+                guard let s = self else { return }
+                let was = s.draft.ims[i].username.isEmpty; s.draft.ims[i].username = v
+                if was && !v.isEmpty && i == s.draft.ims.count - 1 { s.scheduleRebuild() }
+            }
+            let sv = LabelMenu(frame: NSRect(x: valueX + vw - 66, y: y, width: 66, height: 19))
+            sv.configure(options: Labels.imServices, current: im.service, text: { $0 }, grey: false, leftAligned: true, onChange: { [weak self] v in self?.draft.ims[i].service = v; self?.rebuildKeepingScroll() })
+            doc.addSubview(sv)
+            y += 18
+        }
+        y += 10
 
         if draft.addrs.last.map({ !$0.isEmpty }) ?? true { draft.addrs.append(PostalAddr(label: CNLabelWork)) }
         for i in 0..<draft.addrs.count {
@@ -469,32 +498,45 @@ final class CardView: NSView, NSTextFieldDelegate, NSTextViewDelegate {
     @objc func monthChanged(_ p: NSPopUpButton) { draft.birthday?.month = p.indexOfSelectedItem + 1 }
 }
 
-final class LabelPopup: NSView {
-    private var button = NSPopUpButton(frame: .zero, pullsDown: false)
+/// Right-aligned grey label with tiny up/down arrows; click opens the choice menu (checked current value, "Custom…").
+final class LabelMenu: NSView {
+    private var options: [String] = [], current = "", text: (String) -> String = { $0 }
     private var onChange: ((String) -> Void)?
-    private var raw: [String] = []
+    private var grey = true, leftAligned = false
     override var isFlipped: Bool { true }
-    func configure(options: [String], current: String, onChange: @escaping (String) -> Void) {
-        self.onChange = onChange
-        var opts = options; if !current.isEmpty && !opts.contains(current) { opts.append(current) }
-        raw = opts
-        button.removeAllItems(); button.isBordered = false; button.font = Fonts.regular(12); button.alignment = .right
-        for o in opts { button.addItem(withTitle: Labels.text(o)) }
-        button.menu?.addItem(.separator())
-        button.addItem(withTitle: L("Eigene …", "Custom…"))
-        for it in button.itemArray where !it.isSeparatorItem {
-            let ps = NSMutableParagraphStyle(); ps.alignment = .right
-            it.attributedTitle = NSAttributedString(string: it.title, attributes: [.font: Fonts.regular(12), .foregroundColor: Pal.labelGrey, .paragraphStyle: ps])
-        }
-        button.selectItem(at: opts.firstIndex(of: current) ?? 0)
-        button.target = self; button.action = #selector(changed); button.frame = bounds; button.autoresizingMask = [.width, .height]
-        if button.superview == nil { addSubview(button) }
+    override var mouseDownCanMoveWindow: Bool { false }
+    func configure(options: [String], current: String, text: @escaping (String) -> String, grey: Bool, leftAligned: Bool = false, onChange: @escaping (String) -> Void) {
+        self.options = options; self.current = current; self.text = text; self.grey = grey; self.leftAligned = leftAligned; self.onChange = onChange
+        setAccessibilityRole(.popUpButton); setAccessibilityLabel(text(current)); needsDisplay = true
     }
-    @objc func changed() {
-        let i = button.indexOfSelectedItem
-        if i < raw.count { onChange?(raw[i]); return }
+    override func draw(_ r: NSRect) {
+        let col = grey ? Pal.labelGrey : NSColor.black
+        let s = NSAttributedString(string: text(current), attributes: [.font: Fonts.regular(13), .foregroundColor: col])
+        let sz = s.size()
+        let ax = bounds.width - 4                       // arrows hug the right edge
+        s.draw(at: NSPoint(x: leftAligned ? 0 : ax - 10 - sz.width, y: (bounds.height - sz.height) / 2))
+        let ox = leftAligned ? min(sz.width + 6, bounds.width - 8) + 4 : ax - 2
+        (grey ? NSColor.sg(0.62, 1) : NSColor.black).setFill()
+        let up = NSBezierPath(); up.move(to: NSPoint(x: ox - 3, y: bounds.midY - 1.5)); up.line(to: NSPoint(x: ox + 3, y: bounds.midY - 1.5)); up.line(to: NSPoint(x: ox, y: bounds.midY - 4.8)); up.close(); up.fill()
+        let dn = NSBezierPath(); dn.move(to: NSPoint(x: ox - 3, y: bounds.midY + 1.5)); dn.line(to: NSPoint(x: ox + 3, y: bounds.midY + 1.5)); dn.line(to: NSPoint(x: ox, y: bounds.midY + 4.8)); dn.close(); dn.fill()
+    }
+    override func mouseDown(with e: NSEvent) {
+        let m = NSMenu()
+        var opts = options; if !current.isEmpty && !opts.contains(current) { opts.append(current) }
+        for (i, o) in opts.enumerated() {
+            let it = NSMenuItem(title: text(o), action: #selector(pick(_:)), keyEquivalent: ""); it.target = self; it.tag = i; it.state = o == current ? .on : .off; m.addItem(it)
+        }
+        if !grey == false {
+            m.addItem(.separator())
+            let c = NSMenuItem(title: L("Eigene …", "Custom…"), action: #selector(custom), keyEquivalent: ""); c.target = self; m.addItem(c)
+        }
+        objc_setAssociatedObject(self, "opts", opts, .OBJC_ASSOCIATION_RETAIN)
+        m.popUp(positioning: m.items.first { $0.state == .on }, at: NSPoint(x: leftAligned ? 0 : bounds.width - 70, y: 2), in: self)
+    }
+    @objc private func pick(_ i: NSMenuItem) { if let o = objc_getAssociatedObject(self, "opts") as? [String], i.tag < o.count { onChange?(o[i.tag]) } }
+    @objc private func custom() {
         let a = NSAlert(); a.messageText = L("Eigene Bezeichnung", "Custom Label"); a.addButton(withTitle: "OK"); a.addButton(withTitle: L("Abbrechen", "Cancel"))
         let t = NSTextField(frame: NSRect(x: 0, y: 0, width: 220, height: 22)); a.accessoryView = t
-        if a.runModal() == .alertFirstButtonReturn, !t.stringValue.isEmpty { onChange?(t.stringValue) } else { button.selectItem(at: 0) }
+        if a.runModal() == .alertFirstButtonReturn, !t.stringValue.isEmpty { onChange?(t.stringValue) }
     }
 }

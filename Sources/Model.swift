@@ -10,6 +10,8 @@ func L(_ de: String, _ en: String) -> String { isGerman ? de : en }
 
 struct LabeledText: Equatable { var label: String; var value: String }   // label = CNLabel constant or custom text
 
+struct IMAddr: Equatable { var label: String; var service: String; var username: String }
+
 struct PostalAddr: Equatable {
     var label: String
     var street = "", city = "", state = "", zip = "", country = ""
@@ -24,7 +26,9 @@ struct Person: Identifiable {
     var emails: [LabeledText] = []
     var urls: [LabeledText] = []
     var addrs: [PostalAddr] = []
-    var chats: [LabeledText] = []          // read-only passthrough (IM + social)
+    var chats: [LabeledText] = []          // read-only passthrough (social profiles)
+    var ims: [IMAddr] = []
+    var relations: [LabeledText] = []
     var birthday: DateComponents?
     var photo: Data?
     var containerID = ""
@@ -139,7 +143,7 @@ final class Store {
         CNContactIdentifierKey, CNContactNamePrefixKey, CNContactGivenNameKey, CNContactMiddleNameKey, CNContactFamilyNameKey,
         CNContactNameSuffixKey, CNContactNicknameKey, CNContactOrganizationNameKey, CNContactDepartmentNameKey, CNContactJobTitleKey,
         CNContactPhoneNumbersKey, CNContactEmailAddressesKey, CNContactUrlAddressesKey, CNContactPostalAddressesKey,
-        CNContactInstantMessageAddressesKey, CNContactSocialProfilesKey, CNContactBirthdayKey,
+        CNContactInstantMessageAddressesKey, CNContactSocialProfilesKey, CNContactRelationsKey, CNContactBirthdayKey,
         CNContactImageDataKey, CNContactImageDataAvailableKey, CNContactTypeKey,
         CNContactVCardSerialization.descriptorForRequiredKeys()
     ].map { $0 as! CNKeyDescriptor }
@@ -303,8 +307,9 @@ extension Person {
         emails = c.emailAddresses.map { LabeledText(label: lab($0.label), value: $0.value as String) }
         urls = c.urlAddresses.map { LabeledText(label: lab($0.label), value: $0.value as String) }
         addrs = c.postalAddresses.map { PostalAddr(label: lab($0.label), street: $0.value.street, city: $0.value.city, state: $0.value.state, zip: $0.value.postalCode, country: $0.value.country) }
-        chats = c.instantMessageAddresses.map { LabeledText(label: $0.value.service, value: $0.value.username) }
-            + c.socialProfiles.map { LabeledText(label: $0.value.service, value: $0.value.username) }
+        ims = c.instantMessageAddresses.map { IMAddr(label: lab($0.label), service: $0.value.service, username: $0.value.username) }
+        relations = c.contactRelations.map { LabeledText(label: lab($0.label), value: $0.value.name) }
+        chats = c.socialProfiles.map { LabeledText(label: $0.value.service, value: $0.value.username) }
         birthday = c.birthday
         photo = c.imageDataAvailable ? c.imageData : nil
         asCompany = c.contactType == .organization
@@ -322,6 +327,8 @@ extension Person {
             let pa = CNMutablePostalAddress(); pa.street = a.street; pa.city = a.city; pa.state = a.state; pa.postalCode = a.zip; pa.country = a.country
             return CNLabeledValue(label: lab(a.label), value: pa as CNPostalAddress)
         }
+        m.instantMessageAddresses = ims.filter { !$0.username.isEmpty }.map { CNLabeledValue(label: lab($0.label), value: CNInstantMessageAddress(username: $0.username, service: $0.service)) }
+        m.contactRelations = relations.filter { !$0.value.isEmpty }.map { CNLabeledValue(label: lab($0.label), value: CNContactRelation(name: $0.value)) }
         m.birthday = birthday
         m.imageData = photo
     }
@@ -333,6 +340,8 @@ enum Labels {
     static let phone = [CNLabelWork, CNLabelHome, CNLabelPhoneNumberMobile, CNLabelPhoneNumberMain, CNLabelPhoneNumberiPhone, CNLabelPhoneNumberHomeFax, CNLabelPhoneNumberWorkFax, CNLabelPhoneNumberPager, CNLabelOther]
     static let mail = [CNLabelWork, CNLabelHome, CNLabelOther]
     static let url = [CNLabelURLAddressHomePage, CNLabelHome, CNLabelWork, CNLabelOther]
+    static let relation = [CNLabelContactRelationMother, CNLabelContactRelationFather, CNLabelContactRelationParent, CNLabelContactRelationBrother, CNLabelContactRelationSister, CNLabelContactRelationChild, CNLabelContactRelationFriend, CNLabelContactRelationSpouse, CNLabelContactRelationPartner, CNLabelContactRelationAssistant, CNLabelContactRelationManager, CNLabelOther]
+    static let imServices = [CNInstantMessageServiceAIM, CNInstantMessageServiceJabber, CNInstantMessageServiceICQ, CNInstantMessageServiceMSN, CNInstantMessageServiceYahoo, CNInstantMessageServiceSkype, CNInstantMessageServiceGoogleTalk, CNInstantMessageServiceQQ, CNInstantMessageServiceFacebook, CNInstantMessageServiceGaduGadu]
     static let addr = [CNLabelWork, CNLabelHome, CNLabelOther]
 
     /// ML shows lower-case labels ("work", "home page")
@@ -346,6 +355,12 @@ enum Labels {
 
 extension Store {
     func loadDemo() {
+        if CommandLine.arguments.contains("--demo-ref") {   // the two cards of the reference capture
+            containers = [Container(id: "icloud", name: "iCloud", writable: true)]; groups = []
+            var a = Person(id: "a"); a.org = "Apple Computer Inc."; a.containerID = "icloud"; a.asCompany = true
+            var b = Person(id: "b"); b.given = "Stephen"; b.family = "Hackett"; b.containerID = "icloud"; b.emails = [LabeledText(label: "_$!<Work>!$_", value: "stephen@hackett.fm")]
+            people = [a, b]; return
+        }
         containers = CommandLine.arguments.contains("--demo-multi") ? [Container(id: "icloud", name: "iCloud", writable: true), Container(id: "ldap", name: "Directories", writable: false)] : [Container(id: "icloud", name: "iCloud", writable: true)]
         func P(_ g: String, _ f: String, org: String = "", phone: String? = nil, mail: String? = nil, addr: PostalAddr? = nil, cont: String = "icloud") -> Person {
             var p = Person(id: UUID().uuidString); p.given = g; p.family = f; p.org = org; p.containerID = cont

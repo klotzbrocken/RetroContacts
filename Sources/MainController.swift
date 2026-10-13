@@ -131,7 +131,7 @@ final class MainController: NSObject, NSWindowDelegate {
             var listX = lp.minX + st + 10
             if three {
                 sidebar.frame = NSRect(x: lp.minX + st, y: pt + 38, width: BookGeo.sidebarDivider - (lp.minX + st), height: bottomY - 10 - (pt + 38))
-                listX = BookGeo.sidebarDivider + 16.7
+                listX = BookGeo.sidebarDivider + 17
             }
             let listR = f - 26.5
             searchFrame = NSRect(x: listX, y: pt + 38.5, width: listR - listX, height: 18)
@@ -247,7 +247,7 @@ final class MainController: NSObject, NSWindowDelegate {
             else { card.person = nil; if store.access == .granted { card.placeholder = L("Keine Karte ausgewählt", "No Card Selected") } }
         }
         editButton.title = editing ? L("Fertig", "Done") : L("Bearbeiten", "Edit")
-        editButton.titleColor = editing ? NSColor(calibratedRed: 0.05, green: 0.38, blue: 0.85, alpha: 1) : nil
+        editButton.titleColor = editing ? NSColor(srgbRed: 0.05, green: 0.38, blue: 0.85, alpha: 1) : nil
         search.count = query.isEmpty ? nil : visible.count
         card.highlight = query
         editButton.isEnabled = editing || selectedIDs.count == 1

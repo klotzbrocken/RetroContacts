@@ -3,7 +3,7 @@ import Cocoa
 let contactPasteboardType = NSPasteboard.PasteboardType("de.retrocontacts.ids")
 
 enum Prefs {
-    static var sortByFamily: Bool { get { UserDefaults.standard.object(forKey: "sortByFamily") as? Bool ?? false } set { UserDefaults.standard.set(newValue, forKey: "sortByFamily") } }
+    static var sortByFamily: Bool { get { UserDefaults.standard.object(forKey: "sortByFamily") as? Bool ?? true } set { UserDefaults.standard.set(newValue, forKey: "sortByFamily") } }
     static var displayFamilyFirst: Bool { get { UserDefaults.standard.bool(forKey: "displayFamilyFirst") } set { UserDefaults.standard.set(newValue, forKey: "displayFamilyFirst") } }
 }
 
@@ -15,14 +15,14 @@ final class RetroRowView: NSTableRowView {
     override var isEmphasized: Bool { didSet { redrawAll() } }
     override var isSelected: Bool { didSet { redrawAll() } }
     private func redrawAll() { needsDisplay = true; subviews.forEach { $0.needsDisplay = true } }
-    var strong: Bool { isSelected && isEmphasized && (window?.isKeyWindow ?? false) }
+    var strong: Bool { isSelected && (window?.isKeyWindow ?? false) && (superview as? NSTableView).map { window?.firstResponder === $0 } == true }
 
     override func drawBackground(in r: NSRect) {
         switch kind {
         case .header:
-            gradient([NSColor(calibratedRed: 208 / 255, green: 210 / 255, blue: 211 / 255, alpha: 1), NSColor(calibratedRed: 227 / 255, green: 228 / 255, blue: 229 / 255, alpha: 1)]).draw(in: bounds, angle: -90)
-            NSColor(calibratedWhite: 0.96, alpha: 1).setFill(); NSBezierPath(rect: NSRect(x: 0, y: 0, width: bounds.width, height: 1)).fill()
-            NSColor(calibratedWhite: 0.86, alpha: 1).setFill(); NSBezierPath(rect: NSRect(x: 0, y: bounds.height - 1, width: bounds.width, height: 1)).fill()
+            gradient([NSColor(srgbRed: 208 / 255, green: 210 / 255, blue: 211 / 255, alpha: 1), NSColor(srgbRed: 227 / 255, green: 228 / 255, blue: 229 / 255, alpha: 1)]).draw(in: bounds, angle: -90)
+            NSColor.sg(0.96, 1).setFill(); NSBezierPath(rect: NSRect(x: 0, y: 0, width: bounds.width, height: 1)).fill()
+            NSColor.sg(0.86, 1).setFill(); NSBezierPath(rect: NSRect(x: 0, y: bounds.height - 1, width: bounds.width, height: 1)).fill()
         case .person:
             NSColor.white.setFill(); bounds.fill()
             dotted(y: bounds.height - 1, width: bounds.width)
@@ -30,7 +30,7 @@ final class RetroRowView: NSTableRowView {
         }
     }
     func dotted(y: CGFloat, width: CGFloat) {
-        NSColor(calibratedWhite: 0.76, alpha: 1).setFill()
+        NSColor.sg(0.76, 1).setFill()
         var x: CGFloat = 0
         while x < width { NSRect(x: x, y: y, width: 1, height: 1).fill(); x += 2 }
     }
@@ -41,8 +41,8 @@ final class RetroRowView: NSTableRowView {
     override func drawSelection(in r: NSRect) {
         guard kind == .person else { return }
         if strong {
-            gradient([NSColor(calibratedRed: 0.36, green: 0.58, blue: 0.88, alpha: 1), NSColor(calibratedRed: 0.17, green: 0.40, blue: 0.78, alpha: 1)]).draw(in: bounds, angle: -90)
-        } else { Pal.selPale.setFill(); bounds.fill(); NSColor(calibratedRed: 0.86, green: 0.89, blue: 0.95, alpha: 1).setFill(); NSBezierPath(rect: NSRect(x: 0, y: bounds.height - 1, width: bounds.width, height: 1)).fill() }
+            gradient([NSColor(srgbRed: 0.36, green: 0.58, blue: 0.88, alpha: 1), NSColor(srgbRed: 0.17, green: 0.40, blue: 0.78, alpha: 1)]).draw(in: bounds, angle: -90)
+        } else { Pal.selPale.setFill(); bounds.fill(); NSColor(srgbRed: 0.86, green: 0.89, blue: 0.95, alpha: 1).setFill(); NSBezierPath(rect: NSRect(x: 0, y: bounds.height - 1, width: bounds.width, height: 1)).fill() }
     }
 }
 
@@ -61,9 +61,9 @@ final class TextCell: NSView {
         case .header: t.addAttribute(.foregroundColor, value: Pal.selBlueText, range: full)
         case .side:
             let sel = row.isSelected
-            t.addAttribute(.foregroundColor, value: sel ? Pal.sideBlue : NSColor(calibratedWhite: 0.1, alpha: 1), range: full)
+            t.addAttribute(.foregroundColor, value: sel ? Pal.sideBlue : NSColor.sg(0.1, 1), range: full)
             if sel { t.addAttribute(.font, value: Fonts.bold(12), range: full) }
-        case .sideHeader: t.addAttribute(.foregroundColor, value: NSColor(calibratedWhite: 0.55, alpha: 1), range: full)
+        case .sideHeader: t.addAttribute(.foregroundColor, value: NSColor.sg(0.55, 1), range: full)
         }
         let h = t.size().height
         let r = NSRect(x: indent, y: (bounds.height - h) / 2, width: bounds.width - indent - 4, height: h)
@@ -115,8 +115,8 @@ final class ContactList: NSView, NSTableViewDataSource, NSTableViewDelegate {
 
     override func draw(_ dirty: NSRect) {
         NSColor.white.setFill(); bounds.fill()
-        NSColor(calibratedWhite: 0.80, alpha: 1).setStroke(); NSBezierPath(rect: bounds.insetBy(dx: 0.5, dy: 0.5)).stroke()
-        NSColor(calibratedWhite: 0.72, alpha: 1).setFill(); NSBezierPath(rect: NSRect(x: 0, y: 0, width: bounds.width, height: 1)).fill()
+        NSColor.sg(0.80, 1).setStroke(); NSBezierPath(rect: bounds.insetBy(dx: 0.5, dy: 0.5)).stroke()
+        NSColor.sg(0.72, 1).setFill(); NSBezierPath(rect: NSRect(x: 0, y: 0, width: bounds.width, height: 1)).fill()
     }
 
     var selectedIDs: [String] {
@@ -133,7 +133,8 @@ final class ContactList: NSView, NSTableViewDataSource, NSTableViewDelegate {
             return c == .orderedSame ? a.id < b.id : c == .orderedAscending
         }
         var out: [Row] = []; var cur = ""
-        for p in sorted { let l = sectionLetter(p); if l != cur { cur = l; out.append(.header(l)) }; out.append(.person(p)) }
+        let showHeaders = sorted.count >= 8      // the original omits the letter bands for very short lists
+        for p in sorted { let l = sectionLetter(p); if showHeaders && l != cur { cur = l; out.append(.header(l)) }; out.append(.person(p)) }
         rows = out
         suppress = true; table.reloadData()
         table.selectRowIndexes(IndexSet(out.indices.filter { if case .person(let p) = out[$0] { return keep.contains(p.id) } else { return false } }), byExtendingSelection: false)
@@ -197,14 +198,14 @@ final class ListTable: NSTableView {
         super.drawBackground(inClipRect: r)
         guard drawsRuledFiller else { return }
         let start = numberOfRows > 0 ? rect(ofRow: numberOfRows - 1).maxY : 0
-        NSColor(calibratedWhite: 0.76, alpha: 1).setFill()
+        NSColor.sg(0.76, 1).setFill()
         var y = start + 25
         while y < r.maxY { if y + 1 > r.minY { var x = r.minX; while x < r.maxX { NSRect(x: x, y: y, width: 1, height: 1).fill(); x += 2 } }; y += 26 }
     }
     var drawsRuledFiller = false
     override var acceptsFirstResponder: Bool { true }
     override func becomeFirstResponder() -> Bool { let r = super.becomeFirstResponder(); refreshEmphasis(); return r }
-    override func resignFirstResponder() -> Bool { let r = super.resignFirstResponder(); refreshEmphasis(); return r }
+    override func resignFirstResponder() -> Bool { let r = super.resignFirstResponder(); DispatchQueue.main.async { self.refreshEmphasis() }; return r }
     func refreshEmphasis() { enumerateAvailableRowViews { v, _ in v.isEmphasized = (self.window?.firstResponder === self) } }
     override var mouseDownCanMoveWindow: Bool { false }
     var menuProvider: ((NSEvent) -> NSMenu?)?

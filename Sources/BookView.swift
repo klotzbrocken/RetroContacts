@@ -15,9 +15,9 @@ enum ViewMode: Int {
 
 /// Geometry of the book, shared by drawing and by layout of the interactive subviews (all in view coordinates, flipped).
 struct BookGeo {
-    static let sideInset: CGFloat = 6.3, topInset: CGFloat = 7.2, bottomInset: CGFloat = 7
+    static let sideInset: CGFloat = 6.3, topInset: CGFloat = 7.5, bottomInset: CGFloat = 7
     static let edgeStripes: CGFloat = 12         // stacked page edges
-    static let sidebarDivider: CGFloat = 145     // x of the sidebar | list line (3-pane)
+    static let sidebarDivider: CGFloat = 149     // x of the sidebar | list line (3-pane)
     let bounds: NSRect, mode: ViewMode
     var pages: NSRect { NSRect(x: BookGeo.sideInset, y: BookGeo.topInset, width: bounds.width - 2 * BookGeo.sideInset, height: bounds.height - BookGeo.topInset - BookGeo.bottomInset) }
     var fold: CGFloat? { mode == .one ? nil : bounds.midX.rounded() }
@@ -43,8 +43,8 @@ final class BookView: NSView {
             for x in 0..<n {
                 if y % 3 == 0 { col[x] = col[x] * 0.6 + (rnd() - 0.5) * 0.8 }   // vertical streaks, like the wrapped cover
                 let v = col[x] + (rnd() - 0.5) * 0.7
-                let c = v > 0 ? 1.0 : 0.0
-                rep.setColor(NSColor(calibratedWhite: c, alpha: min(0.30, abs(v) * 0.30)), atX: x, y: y)
+                let c = 0.0   // dark flecks only: a light overlay would wash out the leather
+                rep.setColor(NSColor(deviceRed: c, green: c, blue: c, alpha: min(0.30, abs(v) * 0.30)), atX: x, y: y)
             }
         }
         let im = NSImage(size: NSSize(width: n, height: n)); im.addRepresentation(rep); return im
@@ -81,7 +81,7 @@ final class BookView: NSView {
 
     // MARK: drawing (colours sampled from the Mountain Lion reference capture)
 
-    private func g(_ r: Int, _ g: Int, _ b: Int, _ a: CGFloat = 1) -> NSColor { NSColor(calibratedRed: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: a) }
+    private func g(_ r: Int, _ g: Int, _ b: Int, _ a: CGFloat = 1) -> NSColor { NSColor(srgbRed: CGFloat(r) / 255, green: CGFloat(g) / 255, blue: CGFloat(b) / 255, alpha: a) }
     private func lin(_ path: NSBezierPath, _ colors: [NSColor], from: NSPoint, to: NSPoint) {
         guard let ctx = NSGraphicsContext.current?.cgContext else { return }
         ctx.saveGState(); path.addClip()
@@ -97,10 +97,10 @@ final class BookView: NSView {
         let o = b
 
         // --- leather rim: four bevelled strips, light on the outside, dark towards the pages
-        let top = [g(246, 206, 149), g(220, 176, 112), g(192, 141, 69), g(166, 111, 39), g(151, 93, 23)]
-        let left = [g(227, 175, 94), g(195, 140, 69), g(179, 124, 52), g(163, 109, 37), g(144, 96, 34)]
-        let right = [g(226, 168, 95), g(197, 144, 71), g(184, 131, 56), g(174, 119, 48), g(156, 111, 47)]
-        let bottom = [g(139, 113, 78), g(132, 85, 33), g(118, 72, 28), g(112, 66, 26), g(109, 60, 25)]
+        let top = [g(225, 194, 147), g(211, 180, 134), g(208, 175, 126), g(201, 165, 115), g(196, 158, 105), g(192, 152, 96), g(187, 147, 88), g(182, 140, 80), g(177, 133, 70), g(172, 128, 63), g(168, 124, 62), g(155, 109, 44), g(149, 104, 43)]
+        let left = [g(196, 157, 100), g(193, 153, 97), g(191, 151, 94), g(189, 148, 90), g(187, 145, 86), g(182, 140, 81), g(178, 135, 76), g(174, 130, 71), g(167, 124, 65), g(160, 118, 60), g(153, 112, 58), g(143, 103, 45), g(133, 93, 28)]
+        let right = [g(196, 157, 100), g(193, 153, 97), g(191, 151, 94), g(189, 148, 90), g(187, 145, 86), g(182, 140, 81), g(178, 135, 76), g(174, 130, 71), g(167, 124, 65), g(160, 118, 60), g(153, 112, 58), g(143, 103, 45), g(133, 93, 28)]
+        let bottom = [g(66, 32, 11), g(92, 70, 35), g(95, 67, 32), g(103, 73, 35), g(112, 78, 38), g(118, 82, 40), g(121, 83, 42), g(115, 75, 38), g(107, 68, 35), g(98, 62, 33), g(92, 56, 29), g(79, 48, 29)]
         let oTL = NSPoint(x: o.minX, y: o.minY), oTR = NSPoint(x: o.maxX, y: o.minY), oBL = NSPoint(x: o.minX, y: o.maxY), oBR = NSPoint(x: o.maxX, y: o.maxY)
         let pTL = NSPoint(x: pr.minX, y: pr.minY), pTR = NSPoint(x: pr.maxX, y: pr.minY), pBL = NSPoint(x: pr.minX, y: pr.maxY), pBR = NSPoint(x: pr.maxX, y: pr.maxY)
         lin(poly([oTL, oTR, pTR, pTL]), top, from: NSPoint(x: 0, y: o.minY), to: NSPoint(x: 0, y: pr.minY))
@@ -112,13 +112,12 @@ final class BookView: NSView {
         let rim = NSBezierPath(rect: o); rim.append(NSBezierPath(rect: pr)); rim.windingRule = .evenOdd; rim.addClip()
         let tile = BookView.grain, ts = tile.size
         var ty = o.minY
-        while ty < o.maxY { var tx = o.minX; while tx < o.maxX { tile.draw(in: NSRect(x: tx, y: ty, width: ts.width, height: ts.height), from: .zero, operation: .sourceOver, fraction: 0.3, respectFlipped: true, hints: nil); tx += ts.width }; ty += ts.height }
+        while ty < o.maxY { var tx = o.minX; while tx < o.maxX { tile.draw(in: NSRect(x: tx, y: ty, width: ts.width, height: ts.height), from: .zero, operation: .sourceOver, fraction: 0.35, respectFlipped: true, hints: nil); tx += ts.width }; ty += ts.height }
         ctx.restoreGState()
-        g(146, 136, 121).setStroke(); let ol = NSBezierPath(roundedRect: o.insetBy(dx: 0.5, dy: 0.5), xRadius: 2, yRadius: 2); ol.lineWidth = 1; ol.stroke()
-        g(90, 55, 15, 0.35).setStroke(); NSBezierPath(rect: pr.insetBy(dx: -0.5, dy: -0.5)).stroke()
+        
 
         // --- pages
-        func white(_ v: Int) -> NSColor { NSColor(calibratedWhite: CGFloat(v) / 255, alpha: 1) }
+        func white(_ v: Int) -> NSColor { NSColor.sg(CGFloat(v) / 255, 1) }
         let st = BookGeo.edgeStripes
         if let lp = geo.leftPage, let f = geo.fold {
             let rp = geo.rightPage
@@ -128,15 +127,19 @@ final class BookView: NSView {
                 white(229).setFill(); NSRect(x: BookGeo.sidebarDivider, y: lp.minY, width: 1, height: lp.height).fill()
             } else { white(255).setFill(); NSRect(x: lp.minX + st, y: lp.minY, width: lp.width - st, height: lp.height).fill() }
             // soft shading into the binding
-            NSGradient(colors: [white(255).withAlphaComponent(0), white(233)], atLocations: [0, 1], colorSpace: .deviceRGB)!.draw(in: NSRect(x: f - 30, y: lp.minY, width: 30, height: lp.height), angle: 0)
+            NSGradient(colors: [white(255), white(242), white(222)], atLocations: [0, 0.5, 1], colorSpace: .deviceRGB)!.draw(in: NSRect(x: f - 40, y: lp.minY, width: 40, height: lp.height), angle: 0)
             white(255).setFill(); rp.fill()
-            NSGradient(colors: [white(233), white(247), white(255)], atLocations: [0, 0.45, 1], colorSpace: .deviceRGB)!.draw(in: NSRect(x: f, y: rp.minY, width: 34, height: rp.height), angle: 0)
-            white(197).setFill(); NSRect(x: f - 0.5, y: pr.minY, width: 1, height: pr.height).fill()
-            // binding stitches: four slim grey bars on the fold
+            NSGradient(colors: [white(224), white(238), white(255)], atLocations: [0, 0.45, 1], colorSpace: .deviceRGB)!.draw(in: NSRect(x: f, y: rp.minY, width: 40, height: rp.height), angle: 0)
+            white(172).setFill(); NSRect(x: f - 0.6, y: pr.minY, width: 1.2, height: pr.height).fill()
+            // binding stitches: four slim threads on the fold (light core, dark outline, fine twist marks)
             for k in 0..<4 {
                 let y = pr.minY + pr.height * (0.079 + 0.25 * CGFloat(k))
-                let bar = NSBezierPath(roundedRect: NSRect(x: f - 1.8, y: y, width: 3.6, height: 44), xRadius: 1.8, yRadius: 1.8)
-                white(196).setFill(); bar.fill(); white(150).setStroke(); bar.lineWidth = 0.7; bar.stroke()
+                let bar = NSBezierPath(roundedRect: NSRect(x: f - 1.3, y: y, width: 2.6, height: 44), xRadius: 1.3, yRadius: 1.3)
+                white(214).setFill(); bar.fill()
+                ctx.saveGState(); bar.addClip(); white(160).setFill()
+                var t = y + 2; while t < y + 43 { NSRect(x: f - 1.3, y: t, width: 2.6, height: 0.6).fill(); t += 1.6 }
+                ctx.restoreGState()
+                white(105).setStroke(); bar.lineWidth = 0.6; bar.stroke()
             }
             drawStripes(NSRect(x: lp.minX, y: lp.minY, width: st, height: lp.height), outer: .left)
             drawStripes(NSRect(x: rp.maxX - st, y: rp.minY, width: st, height: rp.height), outer: .right)
@@ -150,7 +153,7 @@ final class BookView: NSView {
         let cx = geo.fold ?? b.midX
         func strap(_ r: NSRect, flip: Bool) {
             let p = NSBezierPath(roundedRect: r, xRadius: 2, yRadius: 2)
-            let cols = [g(148, 123, 91), g(100, 68, 36), g(78, 50, 24), g(66, 42, 18), g(62, 33, 9)]
+            let cols = [g(94, 69, 42), g(80, 55, 31), g(80, 55, 31), g(76, 52, 29), g(54, 28, 15)]
             lin(p, flip ? cols.reversed() : cols, from: NSPoint(x: 0, y: r.minY), to: NSPoint(x: 0, y: r.maxY))
             ctx.saveGState(); p.addClip(); tile.draw(in: r, from: .zero, operation: .sourceOver, fraction: 0.6, respectFlipped: true, hints: nil); ctx.restoreGState()
             g(40, 22, 6, 0.8).setStroke(); p.lineWidth = 0.8; p.stroke()
@@ -162,10 +165,10 @@ final class BookView: NSView {
     private enum Side { case left, right }
     private func drawStripes(_ r: NSRect, outer: Side) {
         // alternating grey/white hairlines, getting lighter towards the page
-        let vals: [CGFloat] = outer == .left ? [167, 190, 199, 194, 224, 201, 233, 212, 235, 250] : [250, 235, 212, 233, 201, 224, 194, 199, 190, 167]
+        let vals: [CGFloat] = outer == .left ? [174, 165, 201, 174, 219, 214, 190, 234, 234, 218, 208, 250] : [250, 202, 222, 236, 220, 194, 218, 206, 178, 206, 158, 180]
         let w = r.width / CGFloat(vals.count)
         for (i, v) in vals.enumerated() {
-            NSColor(calibratedWhite: v / 255, alpha: 1).setFill()
+            NSColor.sg(v / 255, 1).setFill()
             NSRect(x: r.minX + CGFloat(i) * w, y: r.minY, width: w + 0.3, height: r.height).fill()
         }
     }
